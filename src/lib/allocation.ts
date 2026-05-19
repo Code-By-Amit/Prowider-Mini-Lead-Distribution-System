@@ -18,12 +18,21 @@ interface AllocationStateRow {
 
 export async function allocateProviders( tx: Prisma.TransactionClient, leadId: number, serviceId: number): Promise<number[]> {
   // Step 1: Lock the AllocationState row for this service using SELECT FOR UPDATE
-  const states = await tx.$queryRaw<AllocationStateRow[]>`
+  // const states = await tx.$queryRaw<AllocationStateRow[]>`
+  //   SELECT id, "serviceId", "poolOrder", "currentIndex"
+  //   FROM "AllocationState"
+  //   WHERE "serviceId" = ${serviceId}
+  //   FOR UPDATE-
+  // `;
+
+  const states = await tx.$queryRaw<AllocationStateRow[]>(
+  Prisma.sql`
     SELECT id, "serviceId", "poolOrder", "currentIndex"
     FROM "AllocationState"
     WHERE "serviceId" = ${serviceId}
-    FOR UPDATE-
-  `;
+    FOR UPDATE
+  `
+);
 
   if (states.length === 0) {
     throw new Error(`No AllocationState found for serviceId ${serviceId}`);
